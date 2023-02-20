@@ -1,0 +1,21 @@
+{
+    "Browser"                   : "false",
+    "BackgroundColor"           : "BLACK",
+    "ClockFont"                 : "Arial:50:%",
+    "ClockFirstGameDelayFont"   : "Arial:24:pt",
+    "HelpFont"                  : "Arial:24:pt",
+    "ClockColor"                : "WHITE",
+    "ClockColorDelay"           : "BLUE",
+    "LogoDefault"               : "NCALogo.jpg",
+    "FullScreen"                : "false",
+    "AppWidth"                  : "75:%",
+    "AppHeight"                 : "75:%",
+    "StartSound"                : "476175__unadamlar__bell-ringing_trimmed.mp3",
+    "EndSound"                  : "foghorn-daniel_simon.mp3",
+    "EndOfGameWarningSound"     : "378912__13gkopeckak__bell.mp3",
+    "CountdownSound"            : "Jeopardy-theme-song.mp3",
+    "AssetPath"                 : "assets",
+    "ConfigPath"                : "config",
+    "ImagesPath"                : "images",
+    "SoundsPath"                : "sounds"
+}
