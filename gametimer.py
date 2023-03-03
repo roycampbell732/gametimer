@@ -1,328 +1,215 @@
-"""
-Application:  Game Timer
-Author: Roy Campbell
-
-
-"""
-import os
-import json
 import pygame
-from pygame.constants import (QUIT, K_SPACE, K_RETURN)
-"""
-Optional Imports as necessary
+from pygame.constants import (KEYDOWN)
 import sys
 import time
 import datetime
 import os
 import json
 import pandas as pd
-"""
 
 
-# default functions setup
+configFile = 'config_app.json'
+path = f"./{configFile}"
+missingConfig = ' \
+\n \
+*** Error: Config File Missing \n \
+There must be a "config_app.json" file in the application directory \
+\n \
+'
+
+configExist = os.path.lexists(path)
+if configExist:
+    with open(configFile, 'r') as jsonFile:
+        # config = pd.read_json(jsonFile)
+        config = json.loads(jsonFile.read())
+else:
+    print(missingConfig)
+    exit()
+
+
+config_df = pd.DataFrame.from_dict(config, orient='index')
+print(config_df[0]['ClockDelayFirstGame'])
+
+
 def config_array(string):
-    if testvar:
-        print("config_array", string)
+    print("config_array", string)
     var_array = string.split(":")
     return var_array
 
 
 def time_setup(time_array):
-    if testvar:
-        print("time_setup", time_array)
+    print("time_setup", time_array)
     timer_secs = (int(time_array[0]) * 60 * 60) + (int(time_array[1]) * 60) + int(time_array[2])
     return timer_secs
 
 
-def config_exist(configFile, message):
-    if testvar:
-        print("config_exist")
-    configFileExist = os.path.lexists(configFile)
-    if configFileExist:
-        with open(configFile, 'r') as jsonFile:
-            # data = pd.read_json(jsonFile)
-            data = json.loads(jsonFile.read())
-    else:
-        print(message)
-        exit()
+# set up application constants
+SECOND = pygame.USEREVENT
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+BLUE = (83, 145, 223)
+YELLOW = (255, 239, 40)
+gameSecs = time_setup(config_array(config_df[0]['GameTime']))
+delaySecs = time_setup(config_array(config_df[0]['ClockDelayBetweenGames']))
+delaySecsFG = time_setup(config_array(config_df[0]['ClockDelayFirstGame']))
+warningSecs = time_setup(config_array(config_df[0]['ClockWarning']))
+endingSecs = time_setup(config_array(config_df[0]['ClockEnding']))
+startSoundFile = config_df[0]['StartSound']
+endSoundFile = config_df[0]['EndSound']
+endOfGameWarningSoundFile = config_df[0]['EndOfGameWarningSound']
+countdownSoundFile = config_df[0]['CountdownSound']
+soundPath = f"./{config_df[0]['AssetPath']}/{config_df[0]['SoundsPath']}"
+startSound = f"{soundPath}/{startSoundFile}"
+endSound = f"{soundPath}/{endSoundFile}"
+endOfGameWarningSound = f"{soundPath}/{endOfGameWarningSoundFile}"
+countdownSound = f"{soundPath}/{countdownSoundFile}"
 
-    # df = pd.DataFrame.from_dict(data, orient='index')
-    # lst = df.values.tolist()
-    return data
+pygame.mixer.init()
+pygame.mixer.music.load(countdownSound)
+pygame.mixer.music.set_volume(0.5)
+pygame.mixer.music.play()
 
-
-# Verify config json files exist and read them in.
-# Find and import application config
-appDir = os.path.dirname(os.path.abspath(__file__))
-assetsDir = 'assets'
-configDir = 'config'
-configApp = os.path.join(appDir, assetsDir, configDir, 'config_app.json')
-configEvent = os.path.join(appDir, assetsDir, configDir, 'config_event.json')
-missingConfigApp = ' \
-\n \
-*** Error: Config File Missing \n \
-There must be a "config_app.json" file in the "assets/config" directory \
-\n '
-missingConfigEvent = ' \
-\n \
-*** Error: Config File Missing \n \
-There must be a "config_event.json" file in the "assets/config" directory \
-\n '
-
-testvar = True
-if testvar:
-    print("testvar")
-
-configApp = config_exist(configApp, missingConfigApp)
-configEvent = config_exist(configEvent, missingConfigEvent)
+width = 75
+height = 75
+frameCount = 0
+frameRate = 60
+clock = pygame.time.Clock()
 
 
-class Settings:
+# Set up Globals from json config_app file
+# EventName =             df[0]['EventName']
+# Location =              df[0]['Location']
+# SiteName =              df[0]['SiteName']
+# Sanctioned =            df[0]['Sanctioned']
+# Browser =               df[0]['Browser']
+# EventType =             df[0]['EventType']
+# Wallpaper =             df[0]['Wallpaper']
+# BackgroundColor =       df[0]['BackgroundColor']
+# ClockFont =             df[0]['ClockFont']
+# ClockColor =            df[0]['ClockColor']
+# ClockColorDelay =       df[0]['ClockColorDelay']
+# EventLogo =             df[0]['EventLogo']
+# GameTime =              df[0]['GameTime']
+# DelayBetweenGames =     df[0]['DelayBetweenGames']
+# ScheduledStartTime =    df[0]['ScheduledStartTime']
+# StartSound =            df[0]['StartSound']
+# EndSound =              df[0]['EndSound']
+# EndOfGameWarningSound = df[0]['EndOfGameWarningSound']
+# CountdownSound =        df[0]['CountdownSound']
+# start timer
+pygame.init()
+screenSize = pygame.display.get_desktop_sizes()
 
-    # set up application constants and defaults
+screenWidth = screenSize[0][0]
+screenHeight = screenSize[0][1]
+print(screenWidth)
+print(screenHeight)
+if screenWidth > 1000:
+    windowW = int(screenWidth * (width / 100))
+    windowH = int(screenHeight * (height / 100))
+else:
+    windowW = int(screenWidth)
+    windowH = int(screenHeight)
 
-    BLACK = (0, 0, 0)
-    WHITE = (255, 255, 255)
-    GREEN = (0, 255, 0)
-    RED = (255, 0, 0)
-    ORANGE = (190, 113, 50)
-    BLUE = (83, 145, 223)
-    YELLOW = (255, 239, 40)
-    VIOLET = (56, 0, 100)
-    BROWN = (150, 75, 0)
-    GRAY = (128, 128, 128)
-    default_colours = [RED, ORANGE, YELLOW, GREEN, BLUE, VIOLET, BROWN, GRAY, WHITE, BLACK]
-    # Clock Settings
-    try:
-        clock_color = (configEvent['ClockColor'])
-    except NameError:
-        clock_color = GREEN
-    try:
-        clock_color_warning = (configEvent['ClockColorWarning'])
-    except NameError:
-        clock_color_warning = YELLOW
-    try:
-        clock_color_ending = (configEvent['ClockColorEnding'])
-    except NameError:
-        clock_color_ending = RED
-    try:
-        clock_color_delay = (configEvent['ClockColorDelay'])
-    except NameError:
-        clock_color_delay = BLUE
-    try:
-        clock_color_delay_first_game = (configEvent['ClockColorDelayFirstGame'])
-    except NameError:
-        clock_color_delay_first_game = ORANGE
+print(windowW, windowH)
+print(type(windowW), type(windowH))
+screen = pygame.display.set_mode([windowW, windowH])
+timeFont = pygame.font.SysFont("Arial", int(windowH/2))
+helpFont = pygame.font.SysFont("Arial", 18)
+screen.fill(BLACK)
+pygame.time.set_timer(SECOND, 1000)
+minutes = 0
+seconds = 0
+gameRunning = False
+pauseTimerPlaying = False
+timerCount = 0
+oldTimerCount = 0
+running = True
+paused = False
+secs = delaySecsFG
+minutes = secs // 60
+seconds = secs % 60
+prevSec = secs + 1
+color = config_df[0]['ClockColorDelayFirstGame']
 
-    gameSecs = int(time_setup(config_array(configEvent['GameTime'])))
-    delaySecs = int(time_setup(config_array(configEvent['ClockDelayBetweenGames'])))
-    warningSecs = int(time_setup(config_array(configEvent['ClockColorWarning'])))
-    endingSecs = int(time_setup(config_array(configEvent['ClockColorEnding'])))
-    delayFirstGameSecs = int(time_setup(config_array(configEvent['ClockDelayFirstGame'])))
-    if delayFirstGameSecs > 100:
-        print("delayFirstGameSecs too long")
-        exit()
-    pygame.init()
-    screenSize = pygame.display.get_desktop_sizes()
-    screenWidth = screenSize[0][0]
-    screenHeight = screenSize[0][1]
-    if configApp["FullScreen"] == "true":
-        windowW = int(screenWidth)
-        windowH = int(screenHeight)
-    else:
-        w = configApp["AppWidth"].split(':')
-        h = configApp["AppHeight"].split(':')
-        if w[1] == "%":
-            windowW = int(screenWidth * (int(w[0]) / 100))
+
+def timerSwitch(prevSec, secs, gameRunning, timerCount):
+    if secs == 0 and prevSec == 1:
+        gameRunning = not gameRunning
+        timerCount += 1
+        if gameRunning:
+            secs = gameSecs + 1
         else:
-            windowW = int(screenWidth * (int(w[0]) / 100))  # todo modify for pixel size
-        if h[1] == "%":
-            windowH = int(screenHeight * (int(h[0]) / 100))
-        else:
-            windowH = int(screenHeight * (int(h[0]) / 100))  # todo modify for pixel size
+            secs = delaySecs + 1
+    return secs, gameRunning, timerCount
 
-    screen = pygame.display.set_mode([windowW, windowH])
-    frameCount = 0
-    frameRate = 60
 
-    clock_font = config_array(configEvent['ClockFont'])
-    if clock_font[2] == "%":
-        clock_size = int(windowH * int(clock_font[1]) / 100)
-    elif clock_font[2] == "pt":
-        clock_size = int(clock_font[1])
+def gameClockColor(secs):
+    if warningSecs > secs > endingSecs:
+        color = config_df[0]['ClockColorWarning']
+    elif secs <= endingSecs:
+        color = config_df[0]['ClockColorEnding']
     else:
-        clock_size = int(clock_font[1])
-    clockFont = pygame.font.SysFont(clock_font[0], clock_size)
-
-    help_font = config_array(configEvent['HelpFont'])
-    if help_font[2] == "%":
-        help_size = int(windowH * int(help_font[1]) / 100)
-    elif help_font[2] == "pt":
-        help_size = int(help_font[1])
-    else:
-        help_size = int(help_font[1])
-    helpFont = pygame.font.SysFont(help_font[0], help_size)
-
-    delay_font = config_array(configEvent['ClockFirstGameDelayFont'])
-    if delay_font[2] == "%":
-        delay_size = int(windowH * int(delay_font[1]) / 100)
-    elif delay_font[2] == "pt":
-        delay_size = int(delay_font[1])
-    else:
-        delay_size = int(delay_font[1])
-    delayFont = pygame.font.SysFont(delay_font[0], delay_size)
-
-    screen_fill = configApp['BackgroundColor']
-
-    file_path = os.path.dirname(os.path.abspath(__file__))
-    assets_path = os.path.join(file_path, configApp["AssetPath"])
-    config_path = os.path.join(assets_path, configApp["ConfigPath"])
-    image_path = os.path.join(assets_path, configApp["ImagesPath"])
-    sound_path = os.path.join(file_path, "SoundsPath")
+        color = config_df[0]['ClockColor']
+    return color
 
 
-def timer():
-    if testvar:
-        print("Timer __init__")
-    gameSecs = Settings.gameSecs
-    if Settings.warningSecs > 0:
-        warningSecs = Settings.warningSecs
-    else:
-        if gameSecs > 60:
-            warningSecs = 30
-        else:
-            warningSecs = int(gameSecs * .25)
-    if Settings.endingSecs > 0:
-        endingSecs = Settings.endingSecs
-    else:
-        if gameSecs > 60:
-            endingSecs = 10
-        else:
-            endingSecs = int(Settings.warningSecs * .5)
-    if Settings.delaySecs > 0:
-        delayBetweenGamesSecs = Settings.delaySecs
-    else:
-        delayBetweenGamesSecs = 90
-
-    if Settings.delayFirstGameSecs > 0:
-        delayFirstGameSecs = Settings.delayFirstGameSecs
-    else:
-        delayFirstGameSecs = 5
-
-    SECOND = pygame.USEREVENT
-    clock = pygame.time.Clock()
-    screen = Settings.screen
-    screen.fill(Settings.screen_fill)
-    pygame.time.set_timer(SECOND, 1000)
-    running = False
-    delayStart = False
-    pause = True
-
-    # Hard Coded Values to be extracted into json config
-    delayClockConfig = [["topRow", "25:%"], ["middleRow", "50:%"], ["bottomRow", "25%"]]
-    gameClockConfig = [["topRow", "25:%"], ["middleRow", "50:%"], ["bottomRow", "25%"]]
-    warningClockConfig = [["topRow", "25:%"], ["middleRow", "50:%"], ["bottomRow", "25%"]]
-    endingClockConfig = [["topRow", "25:%"], ["middleRow", "50:%"], ["bottomRow", "25%"]]
-    delayBetweenGamesClockConfig = [["topRow", "25:%"], ["middleRow", "50:%"], ["bottomRow", "25%"]]
-
-
-    delay_clock = [delayClockConfig, delayFirstGameSecs, delayColor, delayMessage]
-    game_clock = [gameClockConfig, gameSecs, gameColor, gameMessage]
-    warning_clock = [warningClockConfig, warningSecs, warningColor, warningMessage]
-    ending_clock = [endingClockConfig, endingSecs, endingColor, endingMessage]
-    delay_between_games_clock = [delayBetweenGamesClockConfig, delayBetweenGamesSecs, delayBetweenGamesColor, delayBetweenGamesMessage]
-
-    timers_list = [delay_clock, game_clock, warning_clock, ending_clock, delay_between_games_clock]
-    config_list = [clock, running, delayStart, pause]
-
-    return timers_list, config_list
-
-def running(self):
-    gameSecs = Settings.gameSecs
-    screen = Settings.screen
-    frameCount = Settings.frameCount
-    paused = False
+while running:
+    print(timerCount, secs)
     for event in pygame.event.get():
-        if event.type == K_SPACE or event.type == K_RETURN:
-            print("space pressed")
+        if event.type == KEYDOWN:
             paused = not paused
-            while paused:
-                if event.key == pygame.K_SPACE or event.type == K_RETURN:
-                    paused = not paused
-                    running = not running
-        elif event.type == SECOND:
-            if gameSecs > 0:
-                gameSecs -= 1
-            else:
-                # stop timer
-                running = False
-
-    Settings.screen.fill(Settings.BLACK)
-    # if 5 > gameSecs > 1:
-    if warningSecs >= gameSecs > endingSecs:
-        color = Settings.YELLOW
-    elif gameSecs <= Settings.endingSecs:
-        color = Settings.RED
+            print("Paused", paused)
+            if pygame.key.name(event.key) == 'space':
+                print("space")
+            if pygame.key.name(event.key) == 'return':
+                print("return")
+            if pygame.key.name(event.key) == 'escape':
+                print("escape")
+                pygame.quit()
+                sys.exit()
+        if not paused and event.type == SECOND:
+            secs, gameRunning, timerCount = timerSwitch(prevSec, secs, gameRunning, timerCount)
+            print("second")
+            if gameRunning:
+                if secs == gameSecs:
+                    pygame.mixer.music.load(startSound)
+                    pygame.mixer.music.play(loops=1)
+                if secs == warningSecs:
+                    pygame.mixer.music.load(endOfGameWarningSound)
+                    pygame.mixer.music.play(loops=1)
+                if secs == endingSecs:
+                    pygame.mixer.music.load(endSound)
+                    pygame.mixer.music.play(loops=1)
+            if not gameRunning and secs == delaySecs:
+                pygame.mixer.music.load(countdownSound)
+                pygame.mixer.music.play(loops=-1)
+            if secs > 0:
+                prevSec = secs
+                secs -= 1
+                minutes = secs // 60
+                seconds = secs % 60
+    if gameRunning:
+        color = gameClockColor(secs)
     else:
-        color = Settings.GREEN
-    print(gameSecs)
+        color = config_df[0]['ClockColorDelay']
 
-# this is likely where def draw(self) belongs
-
-def draw(self):
-    if testvar:
-        print("draw")
-    minutes = gameSecs // 60
-    seconds = gameSecs % 60
     timer = "{0:02}:{1:02}".format(minutes, seconds)
-    display_text = Settings.clockFont.render(timer, True, color)
+    display_text = timeFont.render(timer, True, color)
     help_message = "Press <SPACE> to pause and again to resume."
-    help_text = Settings.helpFont.render(help_message, True, Settings.BLUE)
+    help_text = helpFont.render(help_message, True, BLUE)
     timeRect = display_text.get_rect()
-    timeRect.center = (int(Settings.windowW/2), int(Settings.windowH/2))
+    timeRect.center = (int(windowW/2), int(windowH/2))
     helpRect = help_text.get_rect()
-    helpRect.bottomleft = (int(Settings.windowW * .1), int(Settings.windowH * .9))
+    helpRect.midbottom = (int(windowW), int(windowH * .9))
+    screen.fill(BLACK)
     screen.blit(display_text, timeRect)
     screen.blit(help_text, helpRect)
     frameCount += 1
-    clock.tick(Settings.frameRate)
+    clock.tick(frameRate)
     pygame.display.flip()
 
-    # Artifact
-    # def run(self):
-    #     if testvar:
-    #         print("run")
-    #     delayStart = True
-    #     running = True
-    #     pause = False
-    #     while delayStart:
-    #         clock.tick(60)
-    #         watch_for_events()
-    #         if not pause:
-    #             draw()
-    #             # events()
-    #     while running:
-    #         clock.tick(60)
-    #         watch_for_events()
-    #         if not pause:
-    #             draw()
-    #             # events()
+pygame.quit()
 
-    # def watch_for_events(self):
-    #     for event in pygame.event.get():
-    #         if event.type == QUIT:
-    #             running = False
-    #         if event.type == pygame.KEYDOWN:
-    #             if event.key == pygame.K_SPACE:
-    #                 pause = not pause
-
-    # artifact
-    # def draw(self):
-    #     background.draw(screen)
-    #     pygame.display.flip()
-
-
-if __name__ == '__main__':
-    timers_list, config_list = timer()
-    pygame.init()
-    running()
