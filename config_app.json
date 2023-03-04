@@ -38,5 +38,7 @@
     "GameMessage"               : "You are currently playing game #",
     "WarningMessage"            : "Time is nearly up for game #",
     "EndingMessage"             : "Ending game #",
-    "DelayBetweenGamesMessage"  : "Please change seats now.  The next game will begin in:"
+    "DelayBetweenGamesMessage"  : "Please change seats now.  The next game will begin in:",
+    "Volume"                    : "5"
+
 }

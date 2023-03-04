@@ -65,12 +65,15 @@ startSound = f"{soundPath}/{startSoundFile}"
 endSound = f"{soundPath}/{endSoundFile}"
 endOfGameWarningSound = f"{soundPath}/{endOfGameWarningSoundFile}"
 countdownSound = f"{soundPath}/{countdownSoundFile}"
-
+soundVolume = config_df[0]['Volume']
+volume = int(soundVolume) / 10
+print("Volume", volume)
 pygame.mixer.init()
-pygame.mixer.music.load(countdownSound)
-pygame.mixer.music.set_volume(0.5)
-pygame.mixer.music.play()
-
+delayRunning = False
+soundPlayed = False
+warningPlayed = False
+endingPlayed = False
+soundsPlayed = [delayRunning, soundPlayed, warningPlayed, endingPlayed]
 width = 75
 height = 75
 frameCount = 0
@@ -124,6 +127,7 @@ minutes = 0
 seconds = 0
 gameRunning = False
 pauseTimerPlaying = False
+
 timerCount = 0
 oldTimerCount = 0
 running = True
@@ -133,6 +137,43 @@ minutes = secs // 60
 seconds = secs % 60
 prevSec = secs + 1
 color = config_df[0]['ClockColorDelayFirstGame']
+
+
+
+def timerSwitchSound(secs, gameRunning, timerCount, soundsPlayed):
+    delayRunning, soundPlayed, warningPlayed, endingPlayed = soundsPlayed
+    if (timerCount == 0 or (timerCount %2 == 0 and secs == delaySecs)) and not delayRunning:
+        delayRunning = True
+        soundPlayed = False
+        warningPlayed = False
+        endingPlayed = False
+
+        delayVolume = volume / 2
+        # pygame.mixer.Sound.set_volume(countdownSound, 0.2)
+        pygame.mixer.music.load(countdownSound)
+        pygame.mixer.music.set_volume(delayVolume)
+        pygame.mixer.music.play(loops=-1)
+    if gameRunning:
+        delayRunning = False
+        if secs == gameSecs and timerCount % 2 == 1 and not soundPlayed:
+            print("sound start")
+            pygame.mixer.music.set_volume(volume)
+            pygame.mixer.music.load(startSound)
+            pygame.mixer.music.play(loops=1)
+            soundPlayed = True
+        if secs == warningSecs and timerCount % 2 == 1 and not warningPlayed:
+            pygame.mixer.Sound.set_volume(volume)
+            pygame.mixer.music.load(endOfGameWarningSound)
+            pygame.mixer.music.play(loops=1)
+            warningPlayed = True
+        if secs == 0 and timerCount % 2 == 1 and not endingPlayed:
+            pygame.mixer.Sound.set_volume(volume)
+            pygame.mixer.music.load(endSound)
+            pygame.mixer.music.play(loops=1)
+            endingPlayed = True
+        print("playing sound")
+
+    return delayRunning, soundPlayed, warningPlayed, endingPlayed
 
 
 def timerSwitch(prevSec, secs, gameRunning, timerCount):
@@ -173,19 +214,7 @@ while running:
         if not paused and event.type == SECOND:
             secs, gameRunning, timerCount = timerSwitch(prevSec, secs, gameRunning, timerCount)
             print("second")
-            if gameRunning:
-                if secs == gameSecs:
-                    pygame.mixer.music.load(startSound)
-                    pygame.mixer.music.play(loops=1)
-                if secs == warningSecs:
-                    pygame.mixer.music.load(endOfGameWarningSound)
-                    pygame.mixer.music.play(loops=1)
-                if secs == endingSecs:
-                    pygame.mixer.music.load(endSound)
-                    pygame.mixer.music.play(loops=1)
-            if not gameRunning and secs == delaySecs:
-                pygame.mixer.music.load(countdownSound)
-                pygame.mixer.music.play(loops=-1)
+
             if secs > 0:
                 prevSec = secs
                 secs -= 1
@@ -207,6 +236,10 @@ while running:
     screen.fill(BLACK)
     screen.blit(display_text, timeRect)
     screen.blit(help_text, helpRect)
+    if not gameRunning:
+        soundsPlayed = timerSwitchSound(secs, gameRunning, timerCount, soundsPlayed)
+    elif gameRunning and not soundPlayed:
+        soundsPlayed = timerSwitchSound(secs, gameRunning, timerCount, soundsPlayed)
     frameCount += 1
     clock.tick(frameRate)
     pygame.display.flip()

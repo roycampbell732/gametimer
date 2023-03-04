@@ -17,5 +17,6 @@
     "AssetPath"                 : "assets",
     "ConfigPath"                : "config",
     "ImagesPath"                : "images",
-    "SoundsPath"                : "sounds"
+    "SoundsPath"                : "sounds",
+    "Volume"                    : "5"
 }
