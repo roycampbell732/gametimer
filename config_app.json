@@ -33,7 +33,7 @@
     "ClockDelayBetweenGames"    : "0:0:10",
     "ClockWarning"              : "0:0:5",
     "ClockEnding"               : "0:0:2",
-    "ClockDelayFirstGame"       : "0:0:3",
+    "ClockDelayFirstGame"       : "0:0:2",
     "DelayMessage"              : "Game #1 will start shortly:",
     "GameMessage"               : "You are currently playing game #",
     "WarningMessage"            : "Time is nearly up for game #",

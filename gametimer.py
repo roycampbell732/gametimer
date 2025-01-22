@@ -162,12 +162,13 @@ def timerSwitchSound(secs, gameRunning, timerCount, soundsPlayed):
             pygame.mixer.music.play(loops=1)
             soundPlayed = True
         if secs == warningSecs and timerCount % 2 == 1 and not warningPlayed:
-            pygame.mixer.Sound.set_volume(volume)
+ 
+            pygame.mixer.music.set_volume(volume)
             pygame.mixer.music.load(endOfGameWarningSound)
             pygame.mixer.music.play(loops=1)
             warningPlayed = True
         if secs == 0 and timerCount % 2 == 1 and not endingPlayed:
-            pygame.mixer.Sound.set_volume(volume)
+            pygame.mixer.music.set_volume(volume)
             pygame.mixer.music.load(endSound)
             pygame.mixer.music.play(loops=1)
             endingPlayed = True
@@ -232,7 +233,7 @@ while running:
     timeRect = display_text.get_rect()
     timeRect.center = (int(windowW/2), int(windowH/2))
     helpRect = help_text.get_rect()
-    helpRect.midbottom = (int(windowW), int(windowH * .9))
+    helpRect.midbottom = (int(windowW * .8), int(windowH * .9))
     screen.fill(BLACK)
     screen.blit(display_text, timeRect)
     screen.blit(help_text, helpRect)
